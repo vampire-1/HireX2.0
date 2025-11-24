@@ -9,6 +9,9 @@ import { ActionButton } from "@/components/action-button";
 import { useRouter } from "next/navigation";
 
 export default function SiteHeader() {
+   
+
+
     const [isOpen, setIsOpen] = useState(false);
     const [isChatbaseLoaded, setIsChatbaseLoaded] = useState(false);
 
@@ -102,4 +105,8 @@ export default function SiteHeader() {
             </header>
         </>
     );
+
+     return (
+    <header> ... </header>
+  );
 }

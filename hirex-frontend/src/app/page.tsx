@@ -1,4 +1,7 @@
 import SiteHeader from "@/components/site-header";
+console.log('SiteHeader is ->', SiteHeader);
+console.log('typeof SiteHeader ->', typeof SiteHeader);
+
 import {HeroSection} from "@/components/hero-section";
 import {LogoTicker} from "@/components/logo-ticker";
 import SiteFooter from "@/components/site-footer";
@@ -14,7 +17,6 @@ export default function Home() {
         <>
             <SiteHeader />
             <HeroSection />
-            <LogoTicker />
             <Features />
             <Testimonials />
             <CallToAction />
