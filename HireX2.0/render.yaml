@@ -1,0 +1,26 @@
+# Render Blueprint for HireX Backend (Docker)
+# This file can be used to automatically configure your Render service
+
+services:
+  - type: web
+    name: hirex-backend
+    runtime: docker
+    plan: free  # Change to 'starter' or higher for production
+    rootDir: hirex-backend
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true  # Automatically generates a secure secret
+      - key: JWT_SECRET
+        generateValue: true  # Automatically generates a secure secret
+      - key: FRONTEND_ORIGINS
+        value: https://your-app.vercel.app  # Update this after Vercel deployment
+      - key: SMTP_ENABLED
+        value: false
+      - key: PORT
+        value: 8000
+    # Uncomment to add persistent disk storage for database and uploads
+    # disk:
+    #   name: hirex-data
+    #   mountPath: /app/data
+    #   sizeGB: 1

@@ -1,0 +1,30 @@
+# FastAPI stack
+fastapi==0.112.2
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+pydantic==2.9.2
+pydantic-settings==2.5.2
+sqlmodel==0.0.21
+python-dotenv==1.0.1
+
+# NLP / Search
+sentence-transformers==3.0.1
+faiss-cpu==1.8.0.post1
+numpy==1.26.4
+
+# Parsing
+pdfplumber==0.11.4
+docx2txt==0.8
+python-dateutil==2.9.0.post0
+
+# OCR
+pytesseract==0.3.10
+pdf2image==1.17.0
+Pillow==10.4.0
+
+# Authentication
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
+
+python-jose[cryptography]==3.3.0
+email-validator==2.1.0
