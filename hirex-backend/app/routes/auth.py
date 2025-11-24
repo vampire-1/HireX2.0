@@ -107,10 +107,15 @@ def register(payload: RegisterIn, background: BackgroundTasks, session: Session 
     txn = _new_txn(session, user.id, email=user.email, purpose="signup")
 
     # Email the OTP in background (only if enabled)
+    print(f"[DEBUG] Register: SMTP_ENABLED={settings.SMTP_ENABLED}, Email={user.email}")
     if settings.SMTP_ENABLED:
+        print("[DEBUG] Register: Scheduling OTP email")
         background.add_task(send_otp_email, user.email, txn.otp_code)
+    else:
+        print("[DEBUG] Register: SMTP disabled, skipping email")
 
     return TxnOut(transaction_id=txn.transaction_id)
+
 
 
 @router.post("/login", response_model=TxnOut)
@@ -120,9 +125,15 @@ def login(payload: LoginIn, background: BackgroundTasks, session: Session = Depe
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
     txn = _new_txn(session, user.id, email=user.email, purpose="login")
+    txn = _new_txn(session, user.id, email=user.email, purpose="login")
+    print(f"[DEBUG] Login: SMTP_ENABLED={settings.SMTP_ENABLED}, Email={user.email}")
     if settings.SMTP_ENABLED:
+        print("[DEBUG] Login: Scheduling OTP email")
         background.add_task(send_otp_email, user.email, txn.otp_code)
+    else:
+        print("[DEBUG] Login: SMTP disabled, skipping email")
     return TxnOut(transaction_id=txn.transaction_id)
+
 
 
 @router.post("/verify")
@@ -164,7 +175,12 @@ def resend(payload: ResendIn, background: BackgroundTasks, session: Session = De
     session.add(txn)
     session.commit()
 
+    print(f"[DEBUG] Resend: SMTP_ENABLED={settings.SMTP_ENABLED}, Email={txn.email}")
     if settings.SMTP_ENABLED:
+        print("[DEBUG] Resend: Scheduling OTP email")
         background.add_task(send_otp_email, txn.email, txn.otp_code)
+    else:
+        print("[DEBUG] Resend: SMTP disabled, skipping email")
     return {"status": "resent"}
+
 
