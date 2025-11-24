@@ -87,7 +87,8 @@ class TxnOut(BaseModel):
 # Routes
 # ---------------------------------------------------------------------
 @router.post("/register", response_model=TxnOut)
-def register(payload: RegisterIn, background: BackgroundTasks, session: Session = Depends(get_session)):
+def register(payload: RegisterIn, session: Session = Depends(get_session)):
+
     # Does a user already exist?
     existing = session.exec(select(User).where(User.email == payload.email)).first()
     if existing:
@@ -109,8 +110,12 @@ def register(payload: RegisterIn, background: BackgroundTasks, session: Session 
     # Email the OTP in background (only if enabled)
     print(f"[DEBUG] Register: SMTP_ENABLED={settings.SMTP_ENABLED}, Email={user.email}")
     if settings.SMTP_ENABLED:
-        print("[DEBUG] Register: Scheduling OTP email")
-        background.add_task(send_otp_email, user.email, txn.otp_code)
+        print("[DEBUG] Register: Sending OTP email (sync)")
+        try:
+            send_otp_email(user.email, txn.otp_code)
+        except Exception as e:
+            print(f"[ERROR] Register: Failed to send email: {e}")
+            # We don't raise here to allow the user to be created, but they might need to resend.
     else:
         print("[DEBUG] Register: SMTP disabled, skipping email")
 
@@ -118,8 +123,10 @@ def register(payload: RegisterIn, background: BackgroundTasks, session: Session 
 
 
 
+
 @router.post("/login", response_model=TxnOut)
-def login(payload: LoginIn, background: BackgroundTasks, session: Session = Depends(get_session)):
+def login(payload: LoginIn, session: Session = Depends(get_session)):
+
     user = session.exec(select(User).where(User.email == payload.email)).first()
     if not user or not _verify_password(payload.password, user.password_hash or ""):
         raise HTTPException(status_code=400, detail="Invalid credentials")
@@ -128,11 +135,15 @@ def login(payload: LoginIn, background: BackgroundTasks, session: Session = Depe
     txn = _new_txn(session, user.id, email=user.email, purpose="login")
     print(f"[DEBUG] Login: SMTP_ENABLED={settings.SMTP_ENABLED}, Email={user.email}")
     if settings.SMTP_ENABLED:
-        print("[DEBUG] Login: Scheduling OTP email")
-        background.add_task(send_otp_email, user.email, txn.otp_code)
+        print("[DEBUG] Login: Sending OTP email (sync)")
+        try:
+            send_otp_email(user.email, txn.otp_code)
+        except Exception as e:
+            print(f"[ERROR] Login: Failed to send email: {e}")
     else:
         print("[DEBUG] Login: SMTP disabled, skipping email")
     return TxnOut(transaction_id=txn.transaction_id)
+
 
 
 
@@ -161,7 +172,8 @@ def verify(payload: VerifyIn, session: Session = Depends(get_session)):
     return {"ok": True}
 
 @router.post("/resend")
-def resend(payload: ResendIn, background: BackgroundTasks, session: Session = Depends(get_session)):
+def resend(payload: ResendIn, session: Session = Depends(get_session)):
+
     txn = session.exec(
         select(AuthTxn).where(AuthTxn.transaction_id == payload.transaction_id)
     ).first()
@@ -177,10 +189,14 @@ def resend(payload: ResendIn, background: BackgroundTasks, session: Session = De
 
     print(f"[DEBUG] Resend: SMTP_ENABLED={settings.SMTP_ENABLED}, Email={txn.email}")
     if settings.SMTP_ENABLED:
-        print("[DEBUG] Resend: Scheduling OTP email")
-        background.add_task(send_otp_email, txn.email, txn.otp_code)
+        print("[DEBUG] Resend: Sending OTP email (sync)")
+        try:
+            send_otp_email(txn.email, txn.otp_code)
+        except Exception as e:
+            print(f"[ERROR] Resend: Failed to send email: {e}")
     else:
         print("[DEBUG] Resend: SMTP disabled, skipping email")
     return {"status": "resent"}
+
 
 
